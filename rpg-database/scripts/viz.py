@@ -24,6 +24,7 @@ TABLE_DISPLAY_NAMES = {
     'inventory': '🎒 背包物品',
     'quests': '📋 任务日志',
     'npc-relations': '🤝 角色关系',
+    'protagonist-skills': '⚡ 主角技能',
     'skills': '⚡ 技能列表',
     'equipment': '🛡️ 装备栏',
     'memo': '📝 备忘录',
@@ -34,7 +35,7 @@ TABLE_DISPLAY_NAMES = {
 
 TABLE_ORDER = [
     'global-state', 'protagonist-info', 'character-stats',
-    'inventory', 'equipment', 'skills', 'quests',
+    'inventory', 'equipment', 'protagonist-skills', 'skills', 'quests',
     'npc-relations', 'factions', 'locations', 'memo', 'chronicle'
 ]
 

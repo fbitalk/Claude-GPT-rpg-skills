@@ -223,10 +223,84 @@ def cmd_create_table(args):
     print(f'表 "{args.name}" 已创建 ({len(headers)} 列: {", ".join(headers)})。')
 
 
+def apply_where(table, where_spec):
+    """根据 --where 条件过滤行。格式: "列名=值1,值2" (多值用逗号分隔，OR 关系)。"""
+    if "=" not in where_spec:
+        sys.exit(f'错误: --where 格式为 "列名=值"，收到: {where_spec}')
+    col_name, raw_values = where_spec.split("=", 1)
+    values = [v.strip() for v in raw_values.split(",")]
+
+    headers = table["headers"]
+    if col_name not in headers:
+        sys.exit(f'错误: 列 "{col_name}" 不存在。可用列: {", ".join(headers)}')
+    col_idx = headers.index(col_name)
+
+    filtered_rows = [
+        row for row in table["rows"]
+        if col_idx < len(row) and str(row[col_idx]).strip() in values
+    ]
+    return {
+        "name": table["name"],
+        "headers": headers,
+        "rows": filtered_rows,
+        "notes": table.get("notes", ""),
+    }
+
+
 def cmd_get_table(args):
     """查看表格数据。"""
     db = load_db(args.db)
     table = get_table(db, args.name)
+
+    # 支持行过滤（--where "列名=值1,值2"）
+    if args.where:
+        table = apply_where(table, args.where)
+
+    # 支持只取部分列（--columns "列1,列2"）
+    if args.columns:
+        col_names = [c.strip() for c in args.columns.split(",")]
+        col_indices = []
+        for cn in col_names:
+            if cn not in table["headers"]:
+                sys.exit(f'错误: 列 "{cn}" 不存在于表 "{args.name}"。可用列: {", ".join(table["headers"])}')
+            col_indices.append(table["headers"].index(cn))
+        filtered = {
+            "name": table["name"],
+            "headers": col_names,
+            "rows": [[row[i] for i in col_indices] for row in table["rows"]],
+            "notes": table.get("notes", ""),
+        }
+        if args.json:
+            print(json.dumps(filtered, ensure_ascii=False, indent=2))
+        else:
+            print(f'[{args.name}] {table["name"]}  ({len(filtered["rows"])} 行 x {len(filtered["headers"])} 列) [仅选定列]')
+            if table.get("notes"):
+                print(f'备注: {table["notes"]}')
+            print()
+            print(format_table(filtered))
+        return
+
+    # 支持只取最后 N 行（--last N）
+    if args.last is not None:
+        n = args.last
+        rows = table["rows"]
+        sliced = {
+            "name": table["name"],
+            "headers": table["headers"],
+            "rows": rows[-n:] if n > 0 else rows,
+            "notes": table.get("notes", ""),
+        }
+        if args.json:
+            print(json.dumps(sliced, ensure_ascii=False, indent=2))
+        else:
+            total = len(rows)
+            shown = min(n, total) if n > 0 else total
+            print(f'[{args.name}] {table["name"]}  (显示最近 {shown} 行，共 {total} 行)')
+            if table.get("notes"):
+                print(f'备注: {table["notes"]}')
+            print()
+            print(format_table(sliced))
+        return
 
     if args.json:
         print(json.dumps(table, ensure_ascii=False, indent=2))
@@ -364,6 +438,82 @@ def cmd_import(args):
     print(f'数据库 "{target_name}" 已导入 ({len(data.get("tables", {}))} 个表)。')
 
 
+def estimate_tokens(text: str) -> int:
+    """粗略估算一段文本的 Token 数。中文字符 ≈0.5 token，英文词 ≈1 token。"""
+    if not text:
+        return 0
+    import re
+    # 统计中文字符
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]', text))
+    # 统计英文单词
+    english_words = len(re.findall(r'[a-zA-Z]+', text))
+    return chinese_chars // 2 + english_words
+
+
+# Token 上限配置
+TOKEN_LIMITS = {
+    ("npc-relations", "背景故事"): 150,
+    ("npc-relations", "关键经历"): 300,
+    ("memo", "记录内容"): 300,
+}
+
+
+def cmd_check_tokens(args):
+    """检查数据库中各表敏感列的 Token 使用情况。"""
+    db = load_db(args.db)
+    tables = db.get("tables", {})
+    if not tables:
+        print("(无表格)")
+        return
+
+    all_ok = True
+    for tkey, table in tables.items():
+        headers = table.get("headers", [])
+        rows = table.get("rows", [])
+        if not rows:
+            continue
+
+        for col_name in headers:
+            limit_key = (tkey, col_name)
+            limit = TOKEN_LIMITS.get(limit_key)
+            if limit is None:
+                continue
+
+            col_idx = headers.index(col_name)
+            total_tokens = 0
+            for row in rows:
+                if col_idx < len(row):
+                    total_tokens += estimate_tokens(str(row[col_idx]))
+
+            if total_tokens > limit:
+                all_ok = False
+
+            # 用纯文本标记避免 Windows GBK 编码问题
+            if total_tokens > limit:
+                mark = "[!] 超限"
+            elif total_tokens > limit * 0.8:
+                mark = "[~] 接近上限"
+                all_ok = False
+            else:
+                mark = "[OK]"
+
+            print(f'表 "{tkey}" — {col_name}: ~{total_tokens} tokens (上限 {limit}) {mark}')
+
+    chronicle = tables.get("chronicle")
+    if chronicle:
+        col_idx = None
+        for i, h in enumerate(chronicle["headers"]):
+            if h == "纪要":
+                col_idx = i
+                break
+        if col_idx is not None:
+            total = sum(estimate_tokens(str(r[col_idx])) if col_idx < len(r) else 0 for r in chronicle["rows"])
+            print(f'表 "chronicle" — 纪要: ~{total} tokens (无硬上限，建议关注总规模)')
+
+    if all_ok:
+        print("\n[OK] 所有 Token 指标在安全范围内。")
+
+
 def cmd_summary(args):
     """打印数据库概览。"""
     db = load_db(args.db)
@@ -407,6 +557,9 @@ def main():
     p.add_argument("name", help="表格键名")
     p.add_argument("--db", default="default", help="数据库名称 (默认: default)")
     p.add_argument("--json", action="store_true", help="以 JSON 格式输出")
+    p.add_argument("--last", type=int, default=None, help="只显示最后 N 行")
+    p.add_argument("--columns", default=None, help='只显示指定列，逗号分隔，如 "概览,编码索引"')
+    p.add_argument("--where", default=None, help='按列值过滤，如 "是否在场=是" 或 "编码索引=AM012,AM007"')
     p.set_defaults(func=cmd_get_table)
 
     # update-cell
@@ -459,6 +612,11 @@ def main():
     p.add_argument("--db", default=None, help="目标数据库名称 (默认: 使用 JSON 中的名称)")
     p.add_argument("--force", action="store_true", help="覆盖已存在的数据库")
     p.set_defaults(func=cmd_import)
+
+    # check-tokens
+    p = sub.add_parser("check-tokens", help="检查 Token 占用")
+    p.add_argument("--db", default="default", help="数据库名称 (默认: default)")
+    p.set_defaults(func=cmd_check_tokens)
 
     # summary
     p = sub.add_parser("summary", help="数据库概览")

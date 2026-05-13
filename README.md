@@ -2,7 +2,7 @@
 
 > 为 Claude/GPT 打造的角色扮演游戏增强技能包 —— 世界书管理静态设定，数据库追踪动态数据，让 AI 成为专业 GM。
 
-[![Skills](https://img.shields.io/badge/Claude-Code-Skills-7B68EE)](https://code.claude.com)
+[![Skills](https://img.shields.io/badge/Claude-Code-Skills-7B68EE)](https://claude.com)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Win|Mac|Linux-lightgrey)]()

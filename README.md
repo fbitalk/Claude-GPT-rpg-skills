@@ -1,6 +1,6 @@
 # 🎲 Claude/GPT RPG Skills
 
-> 为 Claude/GPT 打造的角色扮演游戏增强技能包 —— 世界书管理静态设定，数据库追踪动态数据，让 AI 成为专业 GM。
+> 为 Claude/GPT 打造的角色扮演游戏增强技能 —— 世界书和数据库，让 AI 成为专业 GM。
 
 [![Skills](https://img.shields.io/badge/Claude_Code-Skills-7B68EE)](https://code.claude.com)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue)](https://python.org)

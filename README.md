@@ -1,6 +1,6 @@
-# 🎲 Cherry Studio RPG Skills
+# 🎲 Claude/GPT RPG Skills
 
-> 为 Cherry Studio 打造的角色扮演游戏增强技能包 —— 世界书管理静态设定，数据库追踪动态数据，让 AI 成为专业 GM。
+> 为 Claude/GPT 打造的角色扮演游戏增强技能包 —— 世界书管理静态设定，数据库追踪动态数据，让 AI 成为专业 GM。
 
 [![Skills](https://img.shields.io/badge/Cherry_Studio-Skills-7B68EE)](https://cherry-ai.com)
 [![Python](https://img.shields.io/badge/Python-3.7+-blue)](https://python.org)
@@ -11,7 +11,7 @@
 
 ## 这是什么
 
-两个互相配合的 Cherry Studio Agent Skill，专为文字角色扮演游戏（跑团 / TRPG / 互动叙事）设计：
+两个互相配合的 Agent Skill，专为文字角色扮演游戏（跑团 / TRPG / 互动叙事）设计：
 
 | Skill | 职责 | 数据特性 |
 |-------|------|----------|
@@ -53,9 +53,9 @@ AI 在对话中同时查阅两者 —— 世界书提供故事背景，数据库
 
 ### 安装
 
-**方式一：Cherry Studio 界面安装（推荐）**
+**方式一：客户端界面安装（推荐）**
 
-1. 打开 Cherry Studio → 设置 → Skills
+1. 打开 Opencode 等客户端 → 设置 → Skills
 2. 点击「安装 Skill」
 3. 输入仓库地址：`https://github.com/fbitalk/cherry-studio-rpg-skills`
 
@@ -110,7 +110,7 @@ git clone https://github.com/fbitalk/cherry-studio-rpg-skills.git
 ## 目录结构
 
 ```
-cherry-studio-rpg-skills/
+rpg-skills/
 ├── rpg-database/              # 游戏数据库 Skill
 │   ├── SKILL.md               # Skill 定义（Agent 指令）
 │   ├── scripts/
@@ -133,7 +133,7 @@ cherry-studio-rpg-skills/
 ## 依赖
 
 - **Python 3.7+**（纯标准库，零 pip 依赖）
-- **Cherry Studio** ≥ 1.0（需支持 Agent Skills 和 `HtmlArtifactsCard`）
+- **claude code** ≥ 1.0（需支持 Agent Skills 和 `HtmlArtifactsCard`）
 
 ---
 
@@ -147,7 +147,7 @@ cherry-studio-rpg-skills/
 
 - 🐛 遇到问题？[提交 Issue](https://github.com/fbitalk/cherry-studio-rpg-skills/issues)
 - 💡 有建议？欢迎 PR 或在 Discussions 讨论
-- 📖 更多 Cherry Studio Skills：[Cherry Studio 文档](https://docs.cherry-ai.com)
+- 📖 更多 Skills：[claude code文档](https://code.claude.com/docs)
 
 ---
 

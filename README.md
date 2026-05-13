@@ -62,8 +62,7 @@ AI 在对话中同时查阅两者 —— 世界书提供故事背景，数据库
 **方式二：手动安装**
 
 ```bash
-cd "%APPDATA%\CherryStudio\Data\Skills"
-git clone https://github.com/fbitalk/cherry-studio-rpg-skills.git
+git clone https://github.com/fbitalk/Claude-GPT-rpg-skills.git
 ```
 
 ### 首次使用
